@@ -6,7 +6,7 @@ from contextlib import suppress
 from steem.blockchain import Blockchain
 from steem.steemd import Steemd
 from elasticsearch import Elasticsearch 
-import sqlite3
+import pymysql
 
 env_dist = os.environ
 
@@ -53,6 +53,31 @@ if es_pass == None or es_pass == "":
     exit(1)
 print('ES_PASS: %s' % (es_pass))
 
+mysql_host = env_dist.get('MYSQL_HOST')
+if mysql_host == None or mysql_host == "":
+    mysql_host = '127.0.0.1'
+print('MYSQL_HOST: %s' % (mysql_host))
+
+mysql_port = env_dist.get('MYSQL_PORT')
+if mysql_port == None or mysql_port == "":
+    mysql_port = 3306
+print('MYSQL_PORT: %s' % (mysql_port))
+
+mysql_user = env_dist.get('MYSQL_USER')
+if mysql_user == None or mysql_user == "":
+    mysql_user = 'root'
+print('MYSQL_USER: %s' % (mysql_user))
+
+mysql_pass = env_dist.get('MYSQL_PASS')
+if mysql_pass == None or mysql_pass == "":
+    mysql_pass = 123456
+print('MYSQL_PASS: %s' % (mysql_pass))
+
+mysql_db = env_dist.get('MYSQL_DB')
+if mysql_db == None or mysql_db == "":
+    mysql_db = 'ugly_db'
+print('MYSQL_DB: %s' % (mysql_db))
+
 steemd_nodes = [
     steemd_url,
 ]
@@ -60,14 +85,35 @@ s = Steemd(nodes=steemd_nodes)
 b = Blockchain(s)
 
 es = Elasticsearch([es_url], http_auth=(es_user, es_pass))
-conn = sqlite3.connect('/app/temp/settings.db')
+conn = connect_db()
+
+def connect_db():
+    # Connect to the database
+    try:
+        conn = pymysql.connect(
+            host=mysql_host,
+            port=mysql_port,
+            user=mysql_user,
+            password=mysql_pass,
+            db=mysql_db,
+            charset='utf8mb4',
+            cursorclass=pymysql.cursors.DictCursor
+        )
+        if conn.open == True:
+            return conn
+        else:
+            print('mysql connect error')
+            exit()
+    except:
+        print('mysql is not ready.')
+        exit()
 
 def process(block_nums):
     try:
         block_from = block_nums[0]
         block_to = block_nums[1]
-        c = conn.cursor()
-        c.execute('INSERT INTO block_log (start, end, status) VALUES (%i, %i, %i)' % (int(block_from), int(block_to), 0))
+        with conn.cursor() as cursor:
+            cursor.execute('INSERT INTO block_log (start, end, status) VALUES (%i, %i, %i)' % (int(block_from), int(block_to), 0))
         conn.commit()
         block_infos = s.get_blocks(range(block_from, block_to))
         #print(block_infos)
@@ -86,8 +132,8 @@ def process(block_nums):
                         }
                         r = es.index(index='op_index', body=insert_data)
                         op_count = op_count + 1
-        c = conn.cursor()
-        c.execute('UPDATE block_log SET status = 1 WHERE start = %i and end = %i' % (int(block_from), int(block_to)))
+        with conn.cursor() as cursor:
+            cursor.execute('UPDATE block_log SET status = 1 WHERE start = %i and end = %i' % (int(block_from), int(block_to)))
         conn.commit()
         return {
             'start': block_from,
