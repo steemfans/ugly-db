@@ -37,20 +37,17 @@ start_block_num = int(start_block_num)
 
 es_url = env_dist.get('ES_URL')
 if es_url == None or es_url == "":
-    print('Please set ES_URL')
-    exit(1)
+    es_url = 'http://172.22.0.4:9200'
 print('ES_URL: %s' % (es_url))
 
 es_user = env_dist.get('ES_USER')
 if es_user == None or es_user == "":
-    print('Please set ES_USER')
-    exit(1)
+    es_user = 'elastic'
 print('ES_USER: %s' % (es_user))
 
 es_pass = env_dist.get('ES_PASS')
 if es_pass == None or es_pass == "":
-    print('Please set ES_PASS')
-    exit(1)
+    es_pass = '123456'
 print('ES_PASS: %s' % (es_pass))
 
 mysql_host = env_dist.get('MYSQL_HOST')
@@ -70,7 +67,7 @@ print('MYSQL_USER: %s' % (mysql_user))
 
 mysql_pass = env_dist.get('MYSQL_PASS')
 if mysql_pass == None or mysql_pass == "":
-    mysql_pass = 123456
+    mysql_pass = '123456'
 print('MYSQL_PASS: %s' % (mysql_pass))
 
 mysql_db = env_dist.get('MYSQL_DB')
@@ -133,7 +130,8 @@ def process(block_nums):
                         }
                         #r = es.index(index='op_index', body=insert_data)
                         with conn.cursor() as cursor:
-                            cursor.execute('INSERT INTO op(block_num, tx_id, op_type, op_detail) VALUES (%i, %s, %s, %s)' % (int(block_info['block_num']), trans['transaction_id'], op[0], str(json.dumps(op[1])) ))
+                            sql = 'INSERT INTO op(block_num, tx_id, op_type, op_detail) VALUES (%s, %s, %s, %s)'
+                            cursor.execute(sql, (block_info['block_num'], trans['transaction_id'], op[0], json.dumps(op[1])) )
                         conn.commit()
                         op_count = op_count + 1
         with conn.cursor() as cursor:
