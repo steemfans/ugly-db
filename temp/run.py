@@ -85,7 +85,6 @@ s = Steemd(nodes=steemd_nodes)
 b = Blockchain(s)
 
 es = Elasticsearch([es_url], http_auth=(es_user, es_pass))
-conn = connect_db()
 
 def connect_db():
     # Connect to the database
@@ -107,6 +106,8 @@ def connect_db():
     except:
         print('mysql is not ready.')
         exit()
+
+conn = connect_db()
 
 def process(block_nums):
     try:
