@@ -133,7 +133,7 @@ def process(block_nums):
                         }
                         #r = es.index(index='op_index', body=insert_data)
                         with conn.cursor() as cursor:
-                            cursor.execute('INSERT INTO op(block_num, tx_id, op_type, op_detail) VALUES (%i, %s, %s, %s)' % (int(block_info['block_num']), trans['transaction_id'], op[0], op[1]))
+                            cursor.execute('INSERT INTO op(block_num, tx_id, op_type, op_detail) VALUES (%i, %s, %s, %s)' % (int(block_info['block_num']), trans['transaction_id'], op[0], str(json.dumps(op[1])) ))
                         conn.commit()
                         op_count = op_count + 1
         with conn.cursor() as cursor:
