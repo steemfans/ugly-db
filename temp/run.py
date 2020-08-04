@@ -131,7 +131,10 @@ def process(block_nums):
                             'op_type': op[0],
                             'op_detail': op[1],
                         }
-                        r = es.index(index='op_index', body=insert_data)
+                        #r = es.index(index='op_index', body=insert_data)
+                        with conn.cursor() as cursor:
+                            cursor.execute('INSERT INTO op(block_num, tx_id, op_type, op_detail) VALUES (%i, %s, %s, %s)' % (int(block_info['block_num']), trans['transaction_id'], op[0], op[1]))
+                        conn.commit()
                         op_count = op_count + 1
         with conn.cursor() as cursor:
             cursor.execute('UPDATE block_log SET status = 1 WHERE start = %i and end = %i' % (int(block_from), int(block_to)))
