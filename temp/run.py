@@ -77,14 +77,15 @@ def process(block_nums):
             for trans in transactions:
                 operations = trans['operations']
                 for op in operations:
-                    insert_data = {
-                        'block_num': block_info['block_num'],
-                        'transaction_id': trans['transaction_id'],
-                        'op_type': op[0],
-                        'op_detail': op[1],
-                    }
-                    r = es.index(index='op_index', body=insert_data)
-                    op_count = op_count + 1
+                    if op[0] == 'account_create' or op[0] == 'create_claimed_account' or op[0] == 'account_update' or op[0] == 'account_create_with_delegation':
+                        insert_data = {
+                            'block_num': block_info['block_num'],
+                            'transaction_id': trans['transaction_id'],
+                            'op_type': op[0],
+                            'op_detail': op[1],
+                        }
+                        r = es.index(index='op_index', body=insert_data)
+                        op_count = op_count + 1
         c.execute('UPDATE block_log SET status = 1 WHERE start = %i and end = %i' % (int(block_from), int(block_to)))
         conn.commit()
         return {
@@ -105,7 +106,7 @@ def parse(future):
 if __name__ == '__main__':
     with suppress(KeyboardInterrupt):
         #end_block_num = 5000
-        end_block_num = head_block_number = b.info()['last_irreversible_block_num']
+        end_block_num = b.info()['last_irreversible_block_num']
         print('end block num: %i' % end_block_num)
 
         p = ProcessPoolExecutor(worker_num)
