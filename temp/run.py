@@ -104,13 +104,13 @@ def parse(future):
 
 if __name__ == '__main__':
     with suppress(KeyboardInterrupt):
-        end_block_num = 5000
-        #end_block_num = head_block_number = b.info()['last_irreversible_block_num']
+        #end_block_num = 5000
+        end_block_num = head_block_number = b.info()['last_irreversible_block_num']
         print('end block num: %i' % end_block_num)
 
         p = ProcessPoolExecutor(worker_num)
         keep = True
-        start_block_num = 4950
+        #start_block_num = 4950
         start = start_block_num
         while keep:
             if start + step < end_block_num:
