@@ -64,10 +64,10 @@ conn = sqlite3.connect('/app/temp/settings.db')
 
 def process(block_nums):
     try:
-        c = conn.cursor()
         block_from = block_nums[0]
         block_to = block_nums[1]
-        c.execute('INSERT INTO block_log VALUES (%i, %i, %i)' % (int(block_from), int(block_to), 0))
+        c = conn.cursor()
+        c.execute('INSERT INTO block_log (start, end, status) VALUES (%i, %i, %i)' % (int(block_from), int(block_to), 0))
         conn.commit()
         block_infos = s.get_blocks(range(block_from, block_to))
         #print(block_infos)
@@ -86,6 +86,7 @@ def process(block_nums):
                         }
                         r = es.index(index='op_index', body=insert_data)
                         op_count = op_count + 1
+        c = conn.cursor()
         c.execute('UPDATE block_log SET status = 1 WHERE start = %i and end = %i' % (int(block_from), int(block_to)))
         conn.commit()
         return {
